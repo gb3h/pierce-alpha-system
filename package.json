@@ -21,7 +21,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "antlr4ts": "antlr4ts -visitor ./src/lang/Ocaml.g4"
+    "antlr4ts": "antlr4ts -visitor ./src/lang/Pierce.g4"
   },
   "eslintConfig": {
     "extends": [
