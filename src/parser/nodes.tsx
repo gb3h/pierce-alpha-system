@@ -14,6 +14,18 @@ export class Id implements AstNode {
     }
     myKey: number
     parent: AstNode
+
+    deleteSelf() {
+        if (this.parent !== 0) {
+            if (this.parent instanceof UnaryOp) {
+                this.parent.expr = undefined
+            }
+            if (this.parent instanceof BinaryOp) {
+                this.parent.left === this ? this.parent.left = undefined : this.parent.right = undefined
+            }
+        }
+    }
+
     toString() { return this.name }
     render(enclosing: number) {
         return (
@@ -33,10 +45,21 @@ export class UnaryOp implements AstNode {
     parent: AstNode
     deleteDoubleCut() {
         if (this.parent instanceof UnaryOp) {
-            if (this.expr instanceof AstNode) {
+            if (this.expr) {
                 (this.parent.parent as UnaryOp).expr = this.expr
             } else {
                 (this.parent.parent as UnaryOp).expr = undefined
+            }
+        }
+    }
+
+    deleteSelf() {
+        if (this.parent !== 0) {
+            if (this.parent instanceof UnaryOp) {
+                this.parent.expr = undefined
+            }
+            if (this.parent instanceof BinaryOp) {
+                this.parent.left === this ? this.parent.left = undefined : this.parent.right = undefined
             }
         }
     }
@@ -57,6 +80,18 @@ export class BinaryOp implements AstNode {
     }
     myKey: number
     parent: AstNode
+
+    deleteSelf() {
+        if (this.parent !== 0) {
+            if (this.parent instanceof UnaryOp) {
+                this.parent.expr = undefined
+            }
+            if (this.parent instanceof BinaryOp) {
+                this.parent.left === this ? this.parent.left = undefined : this.parent.right = undefined
+            }
+        }
+    }
+
     toString() { return `(${this.left} ${this.operator} ${this.right})` }
     render(enclosing: number) {
         return (

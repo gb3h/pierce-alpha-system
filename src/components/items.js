@@ -2,7 +2,7 @@ import { styled } from '@material-ui/core'
 import Box from '@material-ui/core/Box';
 import React, { FunctionComponent, useContext, useRef, useState } from 'react';
 import Draggable from './Draggable'
-import { AstTreeMapping, ModeContext } from '../App'
+import { AstTreeMapping, ModeContext, RegenerateGraph } from '../App'
 
 const StyledDiv = styled(Box)({
   display: 'flex',
@@ -33,7 +33,10 @@ const StyledNegativeBox = styled(Box)({
 export const AndBox = props => {
   const [enclosing,] = useState(props.enclosing)
   const [deleted, setDeleted] = useState({});
+
   const Modes = useContext(ModeContext)
+  const Mapping = useContext(AstTreeMapping)
+  const Reload = useContext(RegenerateGraph)
 
   const deleteChild = (id) => {
     setDeleted({ [id]: id, ...deleted })
@@ -51,7 +54,9 @@ export const AndBox = props => {
     e.cancelBubble = true;
     if (e.stopPropagation) e.stopPropagation();
     if (props.deleteChild && (enclosing % 2 === 0) && Modes.isEraseMode) {
-      props.deleteChild(props.ident)
+      // props.deleteChild(props.ident)
+      Mapping[props.ident].deleteSelf()
+      Reload()
     }
   }
 
@@ -64,14 +69,19 @@ export const AndBox = props => {
 
 export const LiteralBox = props => {
   const [enclosing,] = useState(props.enclosing)
+
   const Modes = useContext(ModeContext)
+  const Mapping = useContext(AstTreeMapping)
+  const Reload = useContext(RegenerateGraph)
 
   function myClickHandler(e) {
     if (!e) e = window.event;
     e.cancelBubble = true;
     if (e.stopPropagation) e.stopPropagation();
     if (props.deleteChild && (enclosing % 2 === 0) && Modes.isEraseMode) {
-      props.deleteChild(props.ident)
+      var node = Mapping[props.ident];
+      (node && node.deleteSelf());
+      Reload();
     }
   }
 
@@ -87,6 +97,7 @@ export const NegativeBox = props => {
 
   const Modes = useContext(ModeContext)
   const Mapping = useContext(AstTreeMapping)
+  const Reload = useContext(RegenerateGraph)
 
   const deleteChild = (id) => {
     setDeleted({ [id]: id, ...deleted })
@@ -115,7 +126,9 @@ export const NegativeBox = props => {
     e.cancelBubble = true;
     if (e.stopPropagation) e.stopPropagation();
     if (props.deleteChild && (enclosing % 2 === 0) && Modes.isEraseMode) {
-      props.deleteChild(props.ident)
+      // props.deleteChild(props.ident)
+      Mapping[props.ident].deleteSelf()
+      Reload()
     }
     if (props.deleteDoubleCut && Modes.isDeleteDoubleCutMode) {
       deleteDoubleCut()
