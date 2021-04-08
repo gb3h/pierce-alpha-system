@@ -2,7 +2,7 @@ import { styled } from '@material-ui/core'
 import Box from '@material-ui/core/Box';
 import React, { FunctionComponent, useContext, useRef, useState } from 'react';
 import Draggable from './Draggable'
-import { ModeContext } from '../App'
+import { AstTreeMapping, ModeContext } from '../App'
 
 const StyledDiv = styled(Box)({
   display: 'flex',
@@ -31,7 +31,7 @@ const StyledNegativeBox = styled(Box)({
 });
 
 export const AndBox = props => {
-  const [enclosing, setEnclosing] = useState(props.enclosing)
+  const [enclosing,] = useState(props.enclosing)
   const [deleted, setDeleted] = useState({});
   const Modes = useContext(ModeContext)
 
@@ -41,7 +41,7 @@ export const AndBox = props => {
 
   const childrenWithProps = React.Children.map(props.children, child => {
     if (React.isValidElement(child)) {
-      return React.cloneElement(child, { parent: deleteChild });
+      return React.cloneElement(child, { deleteChild });
     }
     return child;
   })
@@ -50,10 +50,11 @@ export const AndBox = props => {
     if (!e) e = window.event;
     e.cancelBubble = true;
     if (e.stopPropagation) e.stopPropagation();
-    if (props.parent && (enclosing % 2 === 0) && Modes.isEraseMode) {
-      props.parent(props.ident)
+    if (props.deleteChild && (enclosing % 2 === 0) && Modes.isEraseMode) {
+      props.deleteChild(props.ident)
     }
   }
+
   const me = useRef(null);
 
   return (
@@ -62,15 +63,15 @@ export const AndBox = props => {
 }
 
 export const LiteralBox = props => {
-  const [enclosing, setEnclosing] = useState(props.enclosing)
+  const [enclosing,] = useState(props.enclosing)
   const Modes = useContext(ModeContext)
 
   function myClickHandler(e) {
     if (!e) e = window.event;
     e.cancelBubble = true;
     if (e.stopPropagation) e.stopPropagation();
-    if (props.parent && (enclosing % 2 === 0) && Modes.isEraseMode) {
-      props.parent(props.ident)
+    if (props.deleteChild && (enclosing % 2 === 0) && Modes.isEraseMode) {
+      props.deleteChild(props.ident)
     }
   }
 
@@ -80,17 +81,31 @@ export const LiteralBox = props => {
 }
 
 export const NegativeBox = props => {
-  const [enclosing, setEnclosing] = useState(props.enclosing)
+  const [enclosing,] = useState(props.enclosing)
   const [deleted, setDeleted] = useState({});
+  const [invisible, setInvisible] = useState(false);
+
   const Modes = useContext(ModeContext)
+  const Mapping = useContext(AstTreeMapping)
 
   const deleteChild = (id) => {
     setDeleted({ [id]: id, ...deleted })
   }
 
+  const deleteDoubleCut = () => {
+    console.log(Mapping[props.ident])
+  }
+
   const childrenWithProps = React.Children.map(props.children, child => {
     if (React.isValidElement(child)) {
-      return React.cloneElement(child, { parent: deleteChild });
+      return React.cloneElement(child, { deleteChild, deleteDoubleCut });
+    }
+    return child;
+  })
+
+  const childrenWithoutParent = React.Children.map(props.children, child => {
+    if (React.isValidElement(child)) {
+      return React.cloneElement(child, { deleteChild });
     }
     return child;
   })
@@ -99,13 +114,18 @@ export const NegativeBox = props => {
     if (!e) e = window.event;
     e.cancelBubble = true;
     if (e.stopPropagation) e.stopPropagation();
-    if (props.parent && (enclosing % 2 === 0) && Modes.isEraseMode) {
-      props.parent(props.ident)
+    if (props.deleteChild && (enclosing % 2 === 0) && Modes.isEraseMode) {
+      props.deleteChild(props.ident)
+    }
+    if (props.deleteDoubleCut && Modes.isDeleteDoubleCutMode) {
+      deleteDoubleCut()
     }
   }
 
   return (
-    <StyledNegativeBox onClick={myClickHandler}>{childrenWithProps.filter(ch => !(deleted.hasOwnProperty(ch.props.ident)))}</StyledNegativeBox>
+    invisible ?
+      childrenWithoutParent.filter(ch => !(deleted.hasOwnProperty(ch.props.ident))) :
+      (<StyledNegativeBox onClick={myClickHandler}> {childrenWithProps.filter(ch => !(deleted.hasOwnProperty(ch.props.ident)))}</StyledNegativeBox>)
   )
 }
 

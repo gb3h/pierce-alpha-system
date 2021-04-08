@@ -8,8 +8,12 @@ export abstract class AstNode{
 }
 
 export class Id implements AstNode {
-    constructor(public name: string) { this.myKey = AstNode.key++ }
+    constructor(public name: string) { 
+        this.myKey = AstNode.key++ 
+        this.parent = this 
+    }
     myKey: number
+    parent: AstNode
     toString() { return this.name }
     render(enclosing: number) {
         return (
@@ -21,26 +25,44 @@ export class Id implements AstNode {
 }
 
 export class UnaryOp implements AstNode {
-    constructor(public operator: string, public expr: AstNode) { this.myKey = AstNode.key++ }
+    constructor(public operator: string, public expr: AstNode | undefined) { 
+        this.myKey = AstNode.key++ 
+        this.parent = this 
+    }
     myKey: number
+    parent: AstNode
+    deleteDoubleCut() {
+        if (this.parent instanceof UnaryOp) {
+            if (this.expr instanceof AstNode) {
+                (this.parent.parent as UnaryOp).expr = this.expr
+            } else {
+                (this.parent.parent as UnaryOp).expr = undefined
+            }
+        }
+    }
+
     toString() { return `(${this.operator} ${this.expr})` }
     render(enclosing: number) {
         return (
             <NegativeBox ident={this.myKey} enclosing={enclosing}>
-                {this.expr.render(enclosing + 1)}
+                {this.expr && this.expr.render(enclosing + 1)}
             </NegativeBox>
             )
     }
 }
 export class BinaryOp implements AstNode {
-    constructor(public operator: string, public left: AstNode, public right: AstNode) { this.myKey = AstNode.key++}
+    constructor(public operator: string, public left: AstNode | undefined, public right: AstNode | undefined) { 
+        this.myKey = AstNode.key++
+        this.parent = this 
+    }
     myKey: number
+    parent: AstNode
     toString() { return `(${this.left} ${this.operator} ${this.right})` }
     render(enclosing: number) {
         return (
             <AndBox ident={this.myKey} enclosing={enclosing}>
-                {this.left.render(enclosing)}
-                {this.right.render(enclosing)}
+                {this.left && this.left.render(enclosing)}
+                {this.right && this.right.render(enclosing)}
             </AndBox>
             )
     }
