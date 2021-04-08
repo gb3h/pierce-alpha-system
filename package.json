@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@material-ui/core": "^4.11.3",
+    "@material-ui/styles": "^4.11.3",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
@@ -10,8 +12,10 @@
     "antlr4ts-cli": "^0.5.0-alpha.4",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
+    "react-draggable": "^4.4.3",
     "react-json-pretty": "^2.2.0",
     "react-scripts": "4.0.3",
+    "styled-components": "^5.2.3",
     "terminal-in-react": "^4.3.1",
     "typescript": "^4.2.3",
     "web-vitals": "^1.0.1"
@@ -40,5 +44,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@types/react": "^17.0.3"
   }
 }

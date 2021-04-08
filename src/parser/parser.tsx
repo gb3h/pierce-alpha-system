@@ -9,9 +9,10 @@ import { ParseError } from './errors'
 import { BinaryOpContext, ExprContext, NameContext, ParenthesisContext, PierceParser, UnaryOpContext } from '../lang/PierceParser'
 import { PierceVisitor } from '../lang/PierceVisitor'
 import { PierceLexer } from '../lang/PierceLexer'
+
 class ExpressionGenerator extends AbstractParseTreeVisitor<AstNode> implements PierceVisitor<AstNode> {
   visitName(ctx: NameContext): Id {
-    return new Id(ctx.text) 
+    return new Id(ctx.LOWERCASE_IDENT().text) 
   }
   visitParenthesis(ctx: ParenthesisContext): AstNode {
     return this.visit(ctx._exp)
