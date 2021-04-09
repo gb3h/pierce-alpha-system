@@ -3,26 +3,53 @@ import React from 'react'
 import { AndBox, LiteralBox, NegativeBox } from '../components/items.js'
 
 export abstract class AstNode{
-    render?: any
+    abstract render(enclosing: number): any
+    parent?: AstNode
     static key = 0;
+    deleteSelf() {
+        if (this.parent instanceof Root) {
+            this.parent.child = undefined
+            return
+        }
+        if (this.parent instanceof UnaryOp) {
+            this.parent.expr = undefined
+            return
+        }
+        if (this.parent instanceof BinaryOp) {
+            this.parent.left === this ? this.parent.left = undefined : this.parent.right = undefined
+            return
+        }
+    }
 }
 
-export class Id implements AstNode {
+export class Id extends AstNode {
     constructor(public name: string) { 
+        super()
         this.myKey = AstNode.key++ 
         this.parent = this 
     }
     myKey: number
     parent: AstNode
 
-    deleteSelf() {
-        if (this.parent !== 0) {
-            if (this.parent instanceof UnaryOp) {
-                this.parent.expr = undefined
-            }
-            if (this.parent instanceof BinaryOp) {
-                this.parent.left === this ? this.parent.left = undefined : this.parent.right = undefined
-            }
+    insert(astTree: AstNode) {
+        ((this.parent instanceof BinaryOp) || (this.parent instanceof UnaryOp)) && this.parent.insert(astTree)
+    }
+
+    insertDoubleCut() {
+        if (this.parent instanceof Root) {
+            this.parent.child = new UnaryOp(new UnaryOp(this)) 
+            return
+        }
+        if (this.parent instanceof UnaryOp) {
+            this.parent.expr = new UnaryOp(new UnaryOp(this)) 
+            return
+        }
+        
+        if (this.parent instanceof BinaryOp) {
+            this.parent.left === this 
+                ? this.parent.left = new UnaryOp(new UnaryOp(this)) 
+                : this.parent.right = new UnaryOp(new UnaryOp(this))
+            return
         }
     }
 
@@ -36,35 +63,51 @@ export class Id implements AstNode {
     }
 }
 
-export class UnaryOp implements AstNode {
-    constructor(public operator: string, public expr: AstNode | undefined) { 
+export class UnaryOp extends AstNode {
+    constructor(public expr: AstNode | undefined) { 
+        super()
         this.myKey = AstNode.key++ 
-        this.parent = this 
+        this.parent = this
     }
     myKey: number
     parent: AstNode
     deleteDoubleCut() {
         if (this.parent instanceof UnaryOp) {
-            if (this.expr) {
+            if (this.parent.parent instanceof UnaryOp) {
                 (this.parent.parent as UnaryOp).expr = this.expr
-            } else {
-                (this.parent.parent as UnaryOp).expr = undefined
+            } else if (this.parent.parent instanceof BinaryOp) {
+                this.parent.parent.left === this.parent 
+                    ? this.parent.parent.left = this.expr
+                    : this.parent.parent.right = this.expr
+            } else if (this.parent.parent instanceof Root) {
+                this.parent.parent.child = this.expr
             }
         }
     }
 
-    deleteSelf() {
-        if (this.parent !== 0) {
-            if (this.parent instanceof UnaryOp) {
-                this.parent.expr = undefined
-            }
-            if (this.parent instanceof BinaryOp) {
-                this.parent.left === this ? this.parent.left = undefined : this.parent.right = undefined
-            }
+    insertDoubleCut() {
+        if (this.parent instanceof Root) {
+            this.parent.child = new UnaryOp(new UnaryOp(this)) 
+            return
+        }
+        if (this.parent instanceof UnaryOp) {
+            this.parent.expr = new UnaryOp(new UnaryOp(this)) 
+            return
+        }
+        
+        if (this.parent instanceof BinaryOp) {
+            this.parent.left === this 
+                ? this.parent.left = new UnaryOp(new UnaryOp(this)) 
+                : this.parent.right = new UnaryOp(new UnaryOp(this))
+            return
         }
     }
 
-    toString() { return `(${this.operator} ${this.expr})` }
+    insert(astTree: AstNode) {
+        this.expr = new BinaryOp(this.expr, astTree)
+    }
+
+    toString() { return `(~ ${this.expr})` }
     render(enclosing: number) {
         return (
             <NegativeBox ident={this.myKey} enclosing={enclosing}>
@@ -73,26 +116,39 @@ export class UnaryOp implements AstNode {
             )
     }
 }
-export class BinaryOp implements AstNode {
-    constructor(public operator: string, public left: AstNode | undefined, public right: AstNode | undefined) { 
+export class BinaryOp extends AstNode {
+    constructor(public left: AstNode | undefined, public right: AstNode | undefined) { 
+        super()
         this.myKey = AstNode.key++
         this.parent = this 
     }
     myKey: number
     parent: AstNode
 
-    deleteSelf() {
-        if (this.parent !== 0) {
-            if (this.parent instanceof UnaryOp) {
-                this.parent.expr = undefined
-            }
-            if (this.parent instanceof BinaryOp) {
-                this.parent.left === this ? this.parent.left = undefined : this.parent.right = undefined
-            }
+    insertDoubleCut() {
+        if (this.parent instanceof Root) {
+            this.parent.child = new UnaryOp(new UnaryOp(this)) 
+            return
+        }
+        if (this.parent instanceof UnaryOp) {
+            this.parent.expr = new UnaryOp(new UnaryOp(this)) 
+            return
+        }
+        
+        if (this.parent instanceof BinaryOp) {
+            this.parent.left === this 
+                ? this.parent.left = new UnaryOp(new UnaryOp(this)) 
+                : this.parent.right = new UnaryOp(new UnaryOp(this))
+            return
         }
     }
 
-    toString() { return `(${this.left} ${this.operator} ${this.right})` }
+    insert(astTree: AstNode) {
+        this.left = new BinaryOp(this.left, this.right)
+        this.right = astTree
+    }
+
+    toString() { return `(${this.left} /\\ ${this.right})` }
     render(enclosing: number) {
         return (
             <AndBox ident={this.myKey} enclosing={enclosing}>
@@ -102,8 +158,22 @@ export class BinaryOp implements AstNode {
             )
     }
 }
-export class Sequence implements AstNode {
-    constructor(public sequence: AstNode[]) { }
+
+export class Root extends AstNode {
+    constructor(public child: AstNode | undefined) { 
+        super() 
+        this.parent = this
+        this.myKey = AstNode.key++
+    }
+    myKey: number
+    parent: AstNode
+    toString() { return `(Root: ${this.child})`}
+    render(enclosing: number) {
+        return (this.child instanceof AstNode &&this.child.render(enclosing)) 
+    }
+}
+export class Sequence extends AstNode {
+    constructor(public sequence: AstNode[]) { super() }
     toString() { return `(sequence: ${this.sequence})`}
     render(enclosing: number) {
         return (

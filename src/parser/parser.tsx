@@ -18,10 +18,10 @@ class ExpressionGenerator extends AbstractParseTreeVisitor<AstNode> implements P
     return this.visit(ctx._exp)
   }
   visitUnaryOp(ctx: UnaryOpContext): AstNode {
-    return new UnaryOp(ctx._prefixOp.text as string, this.visit(ctx._exp))
+    return new UnaryOp(this.visit(ctx._exp))
   }
   visitBinaryOp(ctx: BinaryOpContext): AstNode {
-    return new BinaryOp(ctx._infixOp.text as string, this.visit(ctx._left), this.visit(ctx._right))
+    return new BinaryOp(this.visit(ctx._left), this.visit(ctx._right))
   }
   defaultResult(): AstNode {
     return new Id("Default") 
