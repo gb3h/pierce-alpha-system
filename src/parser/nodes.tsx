@@ -6,6 +6,7 @@ export abstract class AstNode{
     abstract render(enclosing: number): any
     abstract isDirectChild(id: number): boolean
     abstract isSameType(other: AstNode | undefined): boolean
+    abstract deepClone(): AstNode
     isChild(id: number) {
         return this.isDirectChild(id)
     }
@@ -36,6 +37,10 @@ export class Id extends AstNode {
     }
     myKey: number
     parent: AstNode
+
+    deepClone() {
+        return new Id(this.name)
+    }
 
     isSameType(other: AstNode | undefined): boolean {
         if (!other) {
@@ -93,6 +98,10 @@ export class UnaryOp extends AstNode {
     }
     myKey: number
     parent: AstNode
+
+    deepClone() {
+        return new UnaryOp(this.expr && this.expr.deepClone())
+    }
 
     isSameType(other: AstNode | undefined) {
         if (!other) {
@@ -168,6 +177,10 @@ export class BinaryOp extends AstNode {
     myKey: number
     parent: AstNode
 
+    deepClone() {
+        return new BinaryOp(this.left && this.left.deepClone(), this.right && this.right.deepClone())
+    }
+
     isSameType(other: AstNode | undefined) {
         if (!other) {
             return false
@@ -233,6 +246,10 @@ export class Root extends AstNode {
         this.parent = this
         this.myKey = AstNode.key++
     }
+    deepClone() {
+        return new Root(this.child && this.child.deepClone())
+    }
+
     isSameType(other: AstNode) {
         return false
     }
@@ -258,6 +275,10 @@ export class Root extends AstNode {
 }
 export class Sequence extends AstNode {
     constructor(public sequence: AstNode[]) { super() }
+    deepClone() {
+        return new Sequence([])
+    }
+
     isSameType(other: AstNode) {
         return false
     }

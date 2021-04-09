@@ -186,7 +186,7 @@ export const NegativeBox = props => {
       }
     }
     if (Modes.isInsertionMode && Mapping.hasOwnProperty(props.ident)) {
-      if (Modes.isFreeMode || enclosing % 2 === 1) {
+      if (Modes.isFreeMode || enclosing % 2 === 0) {
         GraphFunctions.insert(props.ident)
         GraphFunctions.hardReload()
       } else {
@@ -242,11 +242,6 @@ export const RootBox = props => {
     if (Modes.isInsertDoubleCutMode) {
       Mapping[props.ident].insertDoubleCut()
       GraphFunctions.hardReload()
-    }
-    if (Modes.isIterationMode && !Modes.iteratorSelected) {
-      GraphFunctions.loadIterationPane(Mapping[props.ident])
-      GraphFunctions.setModes({ ...Modes, iteratorSelected: true })
-      alert("Now select where to iterate")
     }
     if (Modes.isIterationMode && Modes.iteratorSelected) {
       GraphFunctions.iterate(props.ident)

@@ -97,7 +97,7 @@ function App() {
   }
 
   function insert(id) {
-    astMapping[id].insert(insertionAstTree)
+    astMapping[id].insert(insertionAstTree.deepClone())
     setInsertionAstTree()
     setInsertionOutput()
     hardReload()
@@ -106,7 +106,7 @@ function App() {
   function iterate(id) {
     const parentKey = iterationAstTree.myKey;
     if (astMapping[parentKey].isChild(id)) {
-      astMapping[id].insert(iterationAstTree)
+      astMapping[id].insert(iterationAstTree.deepClone())
       setIterationAstTree()
       setIterationOutput()
       hardReload()
