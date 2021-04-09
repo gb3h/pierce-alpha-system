@@ -8,7 +8,7 @@ import { BinaryOp, Id, Root, UnaryOp } from './parser/nodes';
 export const ModeContext = React.createContext({});
 export const AstTreeMapping = React.createContext({});
 export const InsertionAstTree = React.createContext({});
-export const RegenerateGraph = React.createContext({});
+export const GraphFunction = React.createContext({});
 
 const offMode = {
   isFreeMode: false,
@@ -17,18 +17,24 @@ const offMode = {
   isDeleteDoubleCutMode: false,
   isIterationMode: false,
   isDeiterationMode: false,
+  iteratorSelected: false,
 }
+
+const DEFAULT_ROOT = new Root(undefined)
+const DEFAULT_MAPPING = { [DEFAULT_ROOT.myKey]: DEFAULT_ROOT }
 
 function App() {
   const [input, setInput] = useState("")
-  const [output, setOutput] = useState()
-  const [astTree, setAstTree] = useState({})
-  const [astMapping, setAstMapping] = useState({})
+  const [output, setOutput] = useState(DEFAULT_ROOT.render(0))
+  const [astTree, setAstTree] = useState(DEFAULT_ROOT)
+  const [astMapping, setAstMapping] = useState(DEFAULT_MAPPING)
 
   const [insertionInput, setInsertionInput] = useState("")
   const [insertionOutput, setInsertionOutput] = useState()
   const [insertionAstTree, setInsertionAstTree] = useState()
 
+  const [iterationAstTree, setIterationAstTree] = useState()
+  const [iterationOutput, setIterationOutput] = useState()
 
   const [modes, setModes] = useState({
     ...offMode, isFreeMode: true
@@ -59,6 +65,7 @@ function App() {
       const root = new Root(parsed)
       var newMapping = dfs(root, 0, {})
       console.log(root)
+      console.log(newMapping)
       setAstMapping(newMapping)
       setAstTree(root)
       setOutput(root.render(0))
@@ -71,12 +78,53 @@ function App() {
     }
   }
 
-  function regenGraph() {
+  function hardReload() {
     var newMapping = dfs(astTree, 0, {})
     setAstMapping(newMapping)
     setOutput(astTree.render(0))
-    setInsertionOutput()
+    setModes({ ...offMode, isFreeMode: modes.isFreeMode })
+  }
+
+  function softReload() {
+    var newMapping = dfs(astTree, 0, {})
+    setAstMapping(newMapping)
+    setOutput(astTree.render(0))
+  }
+
+  function loadIterationPane(tree) {
+    setIterationAstTree(tree)
+    setIterationOutput(tree.render(0))
+  }
+
+  function insert(id) {
+    astMapping[id].insert(insertionAstTree)
     setInsertionAstTree()
+    setInsertionOutput()
+    hardReload()
+  }
+
+  function iterate(id) {
+    const parentKey = iterationAstTree.myKey;
+    if (astMapping[parentKey].isChild(id)) {
+      astMapping[id].insert(iterationAstTree)
+      setIterationAstTree()
+      setIterationOutput()
+      hardReload()
+    } else {
+      alert("Selected area is not a valid area based on the chosen iterator.")
+    }
+  }
+
+  function deiterate(id) {
+    const parentKey = iterationAstTree.myKey;
+    if (astMapping[parentKey].isSameType(astMapping[id])) {
+      astMapping[id].deleteSelf()
+      setIterationAstTree()
+      setIterationOutput()
+      hardReload()
+    } else {
+      alert("Selected sub-graph is not valid based on the chosen deiterator.")
+    }
   }
 
   function drawInsertion(userInput) {
@@ -93,6 +141,7 @@ function App() {
       }
     }
   }
+
 
   return (
     <div style={{
@@ -116,7 +165,7 @@ function App() {
           <h1>Peirce's Alpha System by Gabriel Yeo</h1>
         </div>
       </header>
-      <RegenerateGraph.Provider value={regenGraph}>
+      <GraphFunction.Provider value={{ hardReload, loadIterationPane, setModes, insert, iterate, softReload, deiterate }}>
         <ModeContext.Provider value={modes}>
           <AstTreeMapping.Provider value={astMapping}>
             <InsertionAstTree.Provider value={insertionAstTree}>
@@ -149,24 +198,35 @@ function App() {
                       backgroundColor: 'white',
                     }}>
                       <Button variant="contained" style={{ margin: '4px' }} color={modes.isFreeMode ? "primary" : "secondary"} onClick={() => setModes({ ...offMode, isFreeMode: !modes.isFreeMode })} >
-                        Allow Generate: {modes.isFreeMode ? "On" : "Off"}
+                        Free Mode: {modes.isFreeMode ? "On" : "Off"}
                       </Button>
-
-                      <Button variant="contained" color={modes.isEraseMode ? "secondary" : "default"} onClick={() => setModes({ ...offMode, isEraseMode: !modes.isEraseMode })} style={{ margin: '4px' }} >
+                      <Button variant="contained" color={modes.isEraseMode ? "secondary" : "default"} onClick={() => setModes({ ...offMode, isFreeMode: modes.isFreeMode, isEraseMode: !modes.isEraseMode })} style={{ margin: '4px' }} >
                         Erase
-                </Button>
-                      <Button variant="contained" color={modes.isInsertDoubleCutMode ? "secondary" : "default"} onClick={() => setModes({ ...offMode, isInsertDoubleCutMode: !modes.isInsertDoubleCutMode })} style={{ margin: '4px' }} >
+                      </Button>
+                      <Button variant="contained" disabled={modes.isFreeMode} color={modes.isInsertDoubleCutMode ? "secondary" : "default"} onClick={() => setModes({ ...offMode, isInsertDoubleCutMode: !modes.isInsertDoubleCutMode })} style={{ margin: '4px' }} >
                         Insert Double Cut
-                </Button>
-                      <Button variant="contained" color={modes.isDeleteDoubleCutMode ? "secondary" : "default"} onClick={() => setModes({ ...offMode, isDeleteDoubleCutMode: !modes.isDeleteDoubleCutMode })} style={{ margin: '4px' }} >
+                      </Button>
+                      <Button variant="contained" disabled={modes.isFreeMode} color={modes.isDeleteDoubleCutMode ? "secondary" : "default"} onClick={() => setModes({ ...offMode, isDeleteDoubleCutMode: !modes.isDeleteDoubleCutMode })} style={{ margin: '4px' }} >
                         Delete Double Cut
-                </Button>
-                      <Button variant="contained" color={modes.isIterationMode ? "secondary" : "default"} onClick={() => setModes({ ...offMode, isIterationMode: !modes.isIterationMode })} style={{ margin: '4px' }} >
-                        Iteration
-                </Button>
-                      <Button variant="contained" color={modes.isDeiterationMode ? "secondary" : "default"} onClick={() => setModes({ ...offMode, isDeiterationMode: !modes.isDeiterationMode })} style={{ margin: '4px' }} >
-                        Deiteration
-                </Button>
+                      </Button>
+                      <Button variant="contained" color={modes.isIterationMode ? modes.iteratorSelected ? "primary" : "secondary" : "default"} onClick={() => {
+                        !modes.isIterationMode && alert("First, click the sub-graph you wish to iterate.")
+                        setModes({ ...offMode, isIterationMode: !modes.isIterationMode })
+                      }
+                      }
+                        disabled={modes.isFreeMode}
+                        style={{ margin: '4px' }} >
+                        Iterate
+                      </Button>
+                      <Button variant="contained" color={modes.isDeiterationMode ? modes.iteratorSelected ? "primary" : "secondary" : "default"} onClick={() => {
+                        !modes.isIterationMode && alert("First, click the parent of the sub-graph you wish to deiterate.")
+                        setModes({ ...offMode, isDeiterationMode: !modes.isDeiterationMode })
+                      }
+                      }
+                        disabled={modes.isFreeMode}
+                        style={{ margin: '4px' }} >
+                        Deiterate
+                      </Button>
                     </div>
                   </Grid>
                   <Grid item xs={4} style={{ minHeight: "300px" }}>
@@ -183,11 +243,27 @@ function App() {
                       <TextField fullWidth id="outlined-basic" label="Input" variant="outlined" value={insertionInput} onChange={e => setInsertionInput(e.target.value)} />
                       <Button variant="contained" style={{ margin: '4px' }} onClick={() => drawInsertion(insertionInput)} >
                         Create
-                   </Button>
-                      {insertionOutput}
-                      <Button variant="contained" color={modes.isInsertionMode ? "secondary" : "default"} style={{ margin: '4px' }} onClick={() => setModes({ ...offMode, isInsertionMode: !modes.isInsertionMode })} >
+                        </Button>
+                      <Button variant="contained" disabled={!insertionOutput} color={modes.isInsertionMode ? "secondary" : "default"} style={{ margin: '4px' }} onClick={() => setModes({ ...offMode, isFreeMode: modes.isFreeMode, isInsertionMode: !modes.isInsertionMode })} >
                         Insert
-                   </Button>
+                        </Button>
+                      {insertionOutput}
+                    </div>
+                    <div style={{
+                      marginTop: '8px',
+                      display: 'flex',
+                      height: "100%",
+                      minHeight: "150px",
+                      width: "100%",
+                      flexDirection: 'column',
+                      flexWrap: 'nowrap',
+                      border: "solid",
+                    }}>
+                      <div style={{ textAlign: "center" }}>De/iteration Pane</div>
+                      <Button variant="contained" disabled={modes.isFreeMode} style={{ margin: '4px' }} onClick={() => { setIterationAstTree(); setIterationOutput(); setModes({ ...modes, iteratorSelected: false }) }} >
+                        Clear Pane
+                        </Button>
+                      {iterationOutput}
                     </div>
                   </Grid>
                   <Grid item xs={6}>
@@ -205,7 +281,7 @@ function App() {
             </InsertionAstTree.Provider>
           </AstTreeMapping.Provider>
         </ModeContext.Provider>
-      </RegenerateGraph.Provider>
+      </GraphFunction.Provider>
     </div >
   );
 }

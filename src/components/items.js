@@ -1,12 +1,23 @@
 import { styled } from '@material-ui/core'
 import Box from '@material-ui/core/Box';
-import React, { useContext, useRef, useState } from 'react';
-import Draggable from './Draggable'
-import { AstTreeMapping, InsertionAstTree, ModeContext, RegenerateGraph } from '../App'
+import React, { useContext, useState } from 'react';
+import { AstTreeMapping, GraphFunction, ModeContext } from '../App'
 
 const StyledDiv = styled(Box)({
   display: 'flex',
   flexWrap: 'nowrap',
+  backgroundColor: '#f1f1f1',
+  margin: 'auto',
+})
+
+const StyledRoot = styled(Box)({
+  display: 'flex',
+  flexWrap: 'noWrap',
+  width: '100%',
+  height: '100%',
+  minWidth: '300px',
+  margin: '8px',
+  backgroundColor: '#f1f1f1',
 })
 
 const StyledLiteralBox = styled(Box)({
@@ -28,6 +39,7 @@ const StyledNegativeBox = styled(Box)({
   lineHeight: '32px',
   fontSize: '30px',
   borderStyle: 'solid',
+  margin: 'auto',
 });
 
 export const AndBox = props => {
@@ -35,33 +47,48 @@ export const AndBox = props => {
 
   const Modes = useContext(ModeContext)
   const Mapping = useContext(AstTreeMapping)
-  const AstTreeToInsert = useContext(InsertionAstTree)
-  const Reload = useContext(RegenerateGraph)
+  const GraphFunctions = useContext(GraphFunction)
 
   function myClickHandler(e) {
     if (!e) e = window.event;
     e.cancelBubble = true;
     if (e.stopPropagation) e.stopPropagation();
     if (Modes.isEraseMode) {
-      if (enclosing % 2 === 0) {
+      if (Modes.isFreeMode || enclosing % 2 === 0) {
         Mapping[props.ident].deleteSelf()
-        Reload()
+        GraphFunctions.softReload()
       }
     }
     if (Modes.isDeleteDoubleCutMode) {
       alert("Not a cut!")
     }
     if (Modes.isInsertionMode && Mapping.hasOwnProperty(props.ident)) {
-      if (enclosing % 2 === 1) {
-        Mapping[props.ident].insert(AstTreeToInsert)
-        Reload()
+      if (Modes.isFreeMode || enclosing % 2 === 1) {
+        GraphFunctions.insert(props.ident)
+        GraphFunctions.hardReload()
       } else {
-        alert("Cannot insert to even enclosed spaces!")
+        alert("Cannot iterate to even enclosed spaces!")
       }
     }
     if (Modes.isInsertDoubleCutMode) {
       Mapping[props.ident].insertDoubleCut()
-      Reload()
+      GraphFunctions.hardReload()
+    }
+    if (Modes.isIterationMode && !Modes.iteratorSelected) {
+      GraphFunctions.loadIterationPane(Mapping[props.ident])
+      GraphFunctions.setModes({ ...Modes, iteratorSelected: true })
+      alert("Now select where to iterate")
+    }
+    if (Modes.isIterationMode && Modes.iteratorSelected) {
+      GraphFunctions.iterate(props.ident)
+    }
+    if (Modes.isDeiterationMode && !Modes.iteratorSelected) {
+      GraphFunctions.loadIterationPane(Mapping[props.ident])
+      GraphFunctions.setModes({ ...Modes, iteratorSelected: true })
+      alert("Now select sub-graph to deiterate")
+    }
+    if (Modes.isDeiterationMode && Modes.iteratorSelected) {
+      GraphFunctions.deiterate(props.ident)
     }
   }
 
@@ -75,33 +102,48 @@ export const LiteralBox = props => {
 
   const Modes = useContext(ModeContext)
   const Mapping = useContext(AstTreeMapping)
-  const AstTreeToInsert = useContext(InsertionAstTree)
-  const Reload = useContext(RegenerateGraph)
+  const GraphFunctions = useContext(GraphFunction)
 
   function myClickHandler(e) {
     if (!e) e = window.event;
     e.cancelBubble = true;
     if (e.stopPropagation) e.stopPropagation();
     if (Modes.isEraseMode) {
-      if (enclosing % 2 === 0) {
+      if (Modes.isFreeMode || enclosing % 2 === 0) {
         Mapping[props.ident].deleteSelf()
-        Reload()
+        GraphFunctions.softReload()
       }
     }
     if (Modes.isDeleteDoubleCutMode) {
       alert("Not a cut! Select a cut directly inside another cut to delete double cut.")
     }
     if (Modes.isInsertionMode && Mapping.hasOwnProperty(props.ident)) {
-      if (enclosing % 2 === 1) {
-        Mapping[props.ident].insert(AstTreeToInsert)
-        Reload()
+      if (Modes.isFreeMode || enclosing % 2 === 1) {
+        GraphFunctions.insert(props.ident)
+        GraphFunctions.hardReload()
       } else {
-        alert("Cannot insert to even enclosed spaces!")
+        alert("Cannot iterate to even enclosed spaces!")
       }
     }
     if (Modes.isInsertDoubleCutMode) {
       Mapping[props.ident].insertDoubleCut()
-      Reload()
+      GraphFunctions.hardReload()
+    }
+    if (Modes.isIterationMode && !Modes.iteratorSelected) {
+      GraphFunctions.loadIterationPane(Mapping[props.ident])
+      GraphFunctions.setModes({ ...Modes, iteratorSelected: true })
+      alert("Now select where to iterate")
+    }
+    if (Modes.isIterationMode && Modes.iteratorSelected) {
+      GraphFunctions.iterate(props.ident)
+    }
+    if (Modes.isDeiterationMode && !Modes.iteratorSelected) {
+      GraphFunctions.loadIterationPane(Mapping[props.ident])
+      GraphFunctions.setModes({ ...Modes, iteratorSelected: true })
+      alert("Now select sub-graph to deiterate")
+    }
+    if (Modes.isDeiterationMode && Modes.iteratorSelected) {
+      GraphFunctions.deiterate(props.ident)
     }
   }
 
@@ -115,8 +157,7 @@ export const NegativeBox = props => {
 
   const Modes = useContext(ModeContext)
   const Mapping = useContext(AstTreeMapping)
-  const AstTreeToInsert = useContext(InsertionAstTree)
-  const Reload = useContext(RegenerateGraph)
+  const GraphFunctions = useContext(GraphFunction)
 
   const childrenWithProps = React.Children.map(props.children, child => {
     if (React.isValidElement(child)) {
@@ -130,30 +171,46 @@ export const NegativeBox = props => {
     e.cancelBubble = true;
     if (e.stopPropagation) e.stopPropagation();
     if (Modes.isEraseMode) {
-      if (enclosing % 2 === 0) {
+      if (Modes.isFreeMode || enclosing % 2 === 0) {
         Mapping[props.ident].deleteSelf()
-        Reload()
+        GraphFunctions.softReload()
       }
     }
     if (Modes.isDeleteDoubleCutMode) {
       if (props.parentIsCut) {
         Mapping[props.ident].deleteDoubleCut()
-        Reload()
+        GraphFunctions.hardReload()
       } else {
         alert("This cut is not the direct child of another cut! Select a cut directly inside another cut to delete double cut.")
       }
     }
     if (Modes.isInsertionMode && Mapping.hasOwnProperty(props.ident)) {
-      if (enclosing % 2 === 1) {
-        Mapping[props.ident].insert(AstTreeToInsert)
-        Reload()
+      if (Modes.isFreeMode || enclosing % 2 === 1) {
+        GraphFunctions.insert(props.ident)
+        GraphFunctions.hardReload()
       } else {
-        alert("Cannot insert to even enclosed spaces!")
+        alert("Cannot iterate to even enclosed spaces!")
       }
     }
     if (Modes.isInsertDoubleCutMode) {
       Mapping[props.ident].insertDoubleCut()
-      Reload()
+      GraphFunctions.hardReload()
+    }
+    if (Modes.isIterationMode && !Modes.iteratorSelected) {
+      GraphFunctions.loadIterationPane(Mapping[props.ident])
+      GraphFunctions.setModes({ ...Modes, iteratorSelected: true })
+      alert("Now select where to iterate")
+    }
+    if (Modes.isIterationMode && Modes.iteratorSelected) {
+      GraphFunctions.iterate(props.ident)
+    }
+    if (Modes.isDeiterationMode && !Modes.iteratorSelected) {
+      GraphFunctions.loadIterationPane(Mapping[props.ident])
+      GraphFunctions.setModes({ ...Modes, iteratorSelected: true })
+      alert("Now select sub-graph to deiterate")
+    }
+    if (Modes.isDeiterationMode && Modes.iteratorSelected) {
+      GraphFunctions.deiterate(props.ident)
     }
   }
 
@@ -162,10 +219,40 @@ export const NegativeBox = props => {
   )
 }
 
-export const DraggableBox = props => {
-  const ref = useRef(null);
-  Draggable(ref);
+export const RootBox = props => {
+  const [enclosing,] = useState(props.enclosing)
+
+  const Modes = useContext(ModeContext)
+  const Mapping = useContext(AstTreeMapping)
+  const GraphFunctions = useContext(GraphFunction)
+
+  function myClickHandler(e) {
+    if (!e) e = window.event;
+    e.cancelBubble = true;
+    if (e.stopPropagation) e.stopPropagation();
+    if (Modes.isInsertionMode && Mapping.hasOwnProperty(props.ident)) {
+      if (Modes.isFreeMode || enclosing % 2 === 1) {
+        GraphFunctions.insert(props.ident)
+        GraphFunctions.hardReload()
+      } else {
+        alert("Cannot iterate to even enclosed spaces!")
+      }
+    }
+    if (Modes.isInsertDoubleCutMode) {
+      Mapping[props.ident].insertDoubleCut()
+      GraphFunctions.hardReload()
+    }
+    if (Modes.isIterationMode && !Modes.iteratorSelected) {
+      GraphFunctions.loadIterationPane(Mapping[props.ident])
+      GraphFunctions.setModes({ ...Modes, iteratorSelected: true })
+      alert("Now select where to iterate")
+    }
+    if (Modes.isIterationMode && Modes.iteratorSelected) {
+      GraphFunctions.iterate(props.ident)
+    }
+  }
+
   return (
-    <StyledDiv ref={ref} className="draggableBox">{props.children}</StyledDiv>
+    <StyledRoot onClick={myClickHandler}>{props.children}</StyledRoot>
   )
 }

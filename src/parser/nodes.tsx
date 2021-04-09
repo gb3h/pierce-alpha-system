@@ -1,10 +1,16 @@
 /* tslint:disable:max-classes-per-file */
 import React from 'react'
-import { AndBox, LiteralBox, NegativeBox } from '../components/items.js'
+import { AndBox, LiteralBox, NegativeBox, RootBox } from '../components/items.js'
 
 export abstract class AstNode{
     abstract render(enclosing: number): any
+    abstract isDirectChild(id: number): boolean
+    abstract isSameType(other: AstNode | undefined): boolean
+    isChild(id: number) {
+        return this.isDirectChild(id)
+    }
     parent?: AstNode
+    myKey?: number
     static key = 0;
     deleteSelf() {
         if (this.parent instanceof Root) {
@@ -30,6 +36,22 @@ export class Id extends AstNode {
     }
     myKey: number
     parent: AstNode
+
+    isSameType(other: AstNode | undefined): boolean {
+        if (!other) {
+            return false
+        }
+        return (other instanceof Id && this.name === other.name)
+    }
+
+    isDirectChild(id: number) {
+        if (this.myKey === id) return true;
+        return false;
+    }
+
+    isChild(id: number) {
+        return this.parent.isChild(id)
+    }
 
     insert(astTree: AstNode) {
         ((this.parent instanceof BinaryOp) || (this.parent instanceof UnaryOp)) && this.parent.insert(astTree)
@@ -71,6 +93,27 @@ export class UnaryOp extends AstNode {
     }
     myKey: number
     parent: AstNode
+
+    isSameType(other: AstNode | undefined) {
+        if (!other) {
+            return false
+        }
+        if (other instanceof UnaryOp) {
+            var expr = !other.expr 
+            return this.expr ? this.expr.isSameType(other.expr) : expr
+        } 
+        return false
+    }
+
+    isDirectChild(id: number) {
+        if (this.myKey === id) return true;
+        var curr = this.expr
+        if (curr) {
+            return curr.isDirectChild(id);
+        }
+        return false;
+    }
+
     deleteDoubleCut() {
         if (this.parent instanceof UnaryOp) {
             if (this.parent.parent instanceof UnaryOp) {
@@ -125,6 +168,31 @@ export class BinaryOp extends AstNode {
     myKey: number
     parent: AstNode
 
+    isSameType(other: AstNode | undefined) {
+        if (!other) {
+            return false
+        }
+        if (other instanceof BinaryOp) {
+            var left = !other.left 
+            var right = !other.right
+            left = this.left ? this.left.isSameType(other.left) : left
+            right = this.right ? this.right.isSameType(other.right) : right 
+            return left && right
+        } 
+        return false
+    }
+
+    isDirectChild(id: number) {
+        if (this.myKey === id) return true;
+        var left = this.left ? this.left.isDirectChild(id) : false
+        var right = this.right ? this.right.isDirectChild(id) : false
+        return left || right;
+    }
+
+    isChild(id: number) {
+        return this.parent.isChild(id)
+    }
+
     insertDoubleCut() {
         if (this.parent instanceof Root) {
             this.parent.child = new UnaryOp(new UnaryOp(this)) 
@@ -165,16 +233,38 @@ export class Root extends AstNode {
         this.parent = this
         this.myKey = AstNode.key++
     }
+    isSameType(other: AstNode) {
+        return false
+    }
+
+    isDirectChild(id: number) {
+        return this.child ? this.child.isDirectChild(id) : false
+    }
+
+    insertDoubleCut() {
+        this.insert(new UnaryOp(new UnaryOp(undefined)))
+    }
+
+    insert(astTree: AstNode) {
+        this.child = this.child ? new BinaryOp(astTree, this.child) : astTree
+    }
+
     myKey: number
     parent: AstNode
     toString() { return `(Root: ${this.child})`}
     render(enclosing: number) {
-        return (this.child instanceof AstNode &&this.child.render(enclosing)) 
+        return (<RootBox ident={this.myKey}>{this.child instanceof AstNode &&this.child.render(enclosing)}</RootBox>) 
     }
 }
 export class Sequence extends AstNode {
     constructor(public sequence: AstNode[]) { super() }
+    isSameType(other: AstNode) {
+        return false
+    }
     toString() { return `(sequence: ${this.sequence})`}
+    isDirectChild(id: number) {
+        return false
+    }
     render(enclosing: number) {
         return (
             <div></div>
