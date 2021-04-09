@@ -198,7 +198,7 @@ function App() {
                       backgroundColor: 'white',
                     }}>
                       <Button variant="contained" style={{ margin: '4px' }} color={modes.isFreeMode ? "primary" : "secondary"} onClick={() => setModes({ ...offMode, isFreeMode: !modes.isFreeMode })} >
-                        Free Mode: {modes.isFreeMode ? "On" : "Off"}
+                        Mode: {modes.isFreeMode ? "Free Edit" : "Rule Based"}
                       </Button>
                       <Button variant="contained" color={modes.isEraseMode ? "secondary" : "default"} onClick={() => setModes({ ...offMode, isFreeMode: modes.isFreeMode, isEraseMode: !modes.isEraseMode })} style={{ margin: '4px' }} >
                         Erase
