@@ -123,7 +123,7 @@ export const LiteralBox = props => {
         GraphFunctions.insert(props.ident)
         GraphFunctions.hardReload()
       } else {
-        alert("Cannot iterate to even enclosed spaces!")
+        alert("Cannot insert to even enclosed spaces!")
       }
     }
     if (Modes.isInsertDoubleCutMode) {
