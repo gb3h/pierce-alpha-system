@@ -8,6 +8,9 @@ import { NameContext } from "./PierceParser";
 import { ParenthesisContext } from "./PierceParser";
 import { UnaryOpContext } from "./PierceParser";
 import { BinaryOpContext } from "./PierceParser";
+import { OrOpContext } from "./PierceParser";
+import { ImplicationOpContext } from "./PierceParser";
+import { BiImplicationOpContext } from "./PierceParser";
 import { ExprContext } from "./PierceParser";
 
 
@@ -67,6 +70,45 @@ export interface PierceListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitBinaryOp?: (ctx: BinaryOpContext) => void;
+
+	/**
+	 * Enter a parse tree produced by the `OrOp`
+	 * labeled alternative in `PierceParser.expr`.
+	 * @param ctx the parse tree
+	 */
+	enterOrOp?: (ctx: OrOpContext) => void;
+	/**
+	 * Exit a parse tree produced by the `OrOp`
+	 * labeled alternative in `PierceParser.expr`.
+	 * @param ctx the parse tree
+	 */
+	exitOrOp?: (ctx: OrOpContext) => void;
+
+	/**
+	 * Enter a parse tree produced by the `ImplicationOp`
+	 * labeled alternative in `PierceParser.expr`.
+	 * @param ctx the parse tree
+	 */
+	enterImplicationOp?: (ctx: ImplicationOpContext) => void;
+	/**
+	 * Exit a parse tree produced by the `ImplicationOp`
+	 * labeled alternative in `PierceParser.expr`.
+	 * @param ctx the parse tree
+	 */
+	exitImplicationOp?: (ctx: ImplicationOpContext) => void;
+
+	/**
+	 * Enter a parse tree produced by the `BiImplicationOp`
+	 * labeled alternative in `PierceParser.expr`.
+	 * @param ctx the parse tree
+	 */
+	enterBiImplicationOp?: (ctx: BiImplicationOpContext) => void;
+	/**
+	 * Exit a parse tree produced by the `BiImplicationOp`
+	 * labeled alternative in `PierceParser.expr`.
+	 * @param ctx the parse tree
+	 */
+	exitBiImplicationOp?: (ctx: BiImplicationOpContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `PierceParser.expr`.

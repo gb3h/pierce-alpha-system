@@ -6,7 +6,7 @@ import { ErrorNode } from 'antlr4ts/tree/ErrorNode'
 import { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor'
 import { AstNode, BinaryOp, UnaryOp, Id, Sequence} from './nodes'
 import { ParseError } from './errors'
-import { BinaryOpContext, ExprContext, NameContext, ParenthesisContext, PierceParser, UnaryOpContext } from '../lang/PierceParser'
+import { BiImplicationOpContext, BinaryOpContext, ExprContext, ImplicationOpContext, NameContext, OrOpContext, ParenthesisContext, PierceParser, UnaryOpContext } from '../lang/PierceParser'
 import { PierceVisitor } from '../lang/PierceVisitor'
 import { PierceLexer } from '../lang/PierceLexer'
 
@@ -22,6 +22,16 @@ class ExpressionGenerator extends AbstractParseTreeVisitor<AstNode> implements P
   }
   visitBinaryOp(ctx: BinaryOpContext): AstNode {
     return new BinaryOp(this.visit(ctx._left), this.visit(ctx._right))
+  }
+  visitOrOp(ctx: OrOpContext): AstNode {
+    return new UnaryOp(new BinaryOp(new UnaryOp(this.visit(ctx._left)), new UnaryOp(this.visit(ctx._right))))
+  }
+  visitImplicationOp(ctx: ImplicationOpContext): AstNode {
+    return new UnaryOp(new BinaryOp(this.visit(ctx._left), new UnaryOp(this.visit(ctx._right))))
+  }
+  visitBiImplicationOp(ctx: BiImplicationOpContext): AstNode {
+    return new BinaryOp(new UnaryOp(new BinaryOp(this.visit(ctx._left), new UnaryOp(this.visit(ctx._right)))), 
+    new UnaryOp(new BinaryOp(this.visit(ctx._right), new UnaryOp(this.visit(ctx._left)))))
   }
   defaultResult(): AstNode {
     return new Id("Default") 

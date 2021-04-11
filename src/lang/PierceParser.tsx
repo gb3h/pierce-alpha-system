@@ -35,6 +35,9 @@ export class PierceParser extends Parser {
 	public static readonly LOWERCASE_IDENT = 4;
 	public static readonly PREFIX_OP = 5;
 	public static readonly INFIX_OP = 6;
+	public static readonly OR_OP = 7;
+	public static readonly IMPLICATION_OP = 8;
+	public static readonly BIIMPLICATION_OP = 9;
 	public static readonly RULE_expr = 0;
 	// tslint:disable:no-trailing-whitespace
 	public static readonly ruleNames: string[] = [
@@ -42,11 +45,12 @@ export class PierceParser extends Parser {
 	];
 
 	private static readonly _LITERAL_NAMES: Array<string | undefined> = [
-		undefined, "'('", "')'",
+		undefined, "'('", "')'", undefined, undefined, undefined, undefined, undefined, 
+		"'->'", "'<->'",
 	];
 	private static readonly _SYMBOLIC_NAMES: Array<string | undefined> = [
 		undefined, undefined, undefined, "WHITESPACE", "LOWERCASE_IDENT", "PREFIX_OP", 
-		"INFIX_OP",
+		"INFIX_OP", "OR_OP", "IMPLICATION_OP", "BIIMPLICATION_OP",
 	];
 	public static readonly VOCABULARY: Vocabulary = new VocabularyImpl(PierceParser._LITERAL_NAMES, PierceParser._SYMBOLIC_NAMES, []);
 
@@ -127,16 +131,16 @@ export class PierceParser extends Parser {
 				this.state = 8;
 				(_localctx as UnaryOpContext)._prefixOp = this.match(PierceParser.PREFIX_OP);
 				this.state = 9;
-				(_localctx as UnaryOpContext)._exp = this.expr(2);
+				(_localctx as UnaryOpContext)._exp = this.expr(5);
 				}
 				break;
 			default:
 				throw new NoViableAltException(this);
 			}
 			this._ctx._stop = this._input.tryLT(-1);
-			this.state = 17;
+			this.state = 26;
 			this._errHandler.sync(this);
-			_alt = this.interpreter.adaptivePredict(this._input, 1, this._ctx);
+			_alt = this.interpreter.adaptivePredict(this._input, 2, this._ctx);
 			while (_alt !== 2 && _alt !== ATN.INVALID_ALT_NUMBER) {
 				if (_alt === 1) {
 					if (this._parseListeners != null) {
@@ -144,24 +148,78 @@ export class PierceParser extends Parser {
 					}
 					_prevctx = _localctx;
 					{
-					{
-					_localctx = new BinaryOpContext(new ExprContext(_parentctx, _parentState));
-					(_localctx as BinaryOpContext)._left = _prevctx;
-					this.pushNewRecursionContext(_localctx, _startState, PierceParser.RULE_expr);
-					this.state = 12;
-					if (!(this.precpred(this._ctx, 1))) {
-						throw this.createFailedPredicateException("this.precpred(this._ctx, 1)");
-					}
-					this.state = 13;
-					(_localctx as BinaryOpContext)._infixOp = this.match(PierceParser.INFIX_OP);
-					this.state = 14;
-					(_localctx as BinaryOpContext)._right = this.expr(2);
+					this.state = 24;
+					this._errHandler.sync(this);
+					switch ( this.interpreter.adaptivePredict(this._input, 1, this._ctx) ) {
+					case 1:
+						{
+						_localctx = new BinaryOpContext(new ExprContext(_parentctx, _parentState));
+						(_localctx as BinaryOpContext)._left = _prevctx;
+						this.pushNewRecursionContext(_localctx, _startState, PierceParser.RULE_expr);
+						this.state = 12;
+						if (!(this.precpred(this._ctx, 4))) {
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 4)");
+						}
+						this.state = 13;
+						(_localctx as BinaryOpContext)._infixOp = this.match(PierceParser.INFIX_OP);
+						this.state = 14;
+						(_localctx as BinaryOpContext)._right = this.expr(5);
+						}
+						break;
+
+					case 2:
+						{
+						_localctx = new OrOpContext(new ExprContext(_parentctx, _parentState));
+						(_localctx as OrOpContext)._left = _prevctx;
+						this.pushNewRecursionContext(_localctx, _startState, PierceParser.RULE_expr);
+						this.state = 15;
+						if (!(this.precpred(this._ctx, 3))) {
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 3)");
+						}
+						this.state = 16;
+						(_localctx as OrOpContext)._infixOp = this.match(PierceParser.OR_OP);
+						this.state = 17;
+						(_localctx as OrOpContext)._right = this.expr(4);
+						}
+						break;
+
+					case 3:
+						{
+						_localctx = new ImplicationOpContext(new ExprContext(_parentctx, _parentState));
+						(_localctx as ImplicationOpContext)._left = _prevctx;
+						this.pushNewRecursionContext(_localctx, _startState, PierceParser.RULE_expr);
+						this.state = 18;
+						if (!(this.precpred(this._ctx, 2))) {
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 2)");
+						}
+						this.state = 19;
+						(_localctx as ImplicationOpContext)._infixOp = this.match(PierceParser.IMPLICATION_OP);
+						this.state = 20;
+						(_localctx as ImplicationOpContext)._right = this.expr(3);
+						}
+						break;
+
+					case 4:
+						{
+						_localctx = new BiImplicationOpContext(new ExprContext(_parentctx, _parentState));
+						(_localctx as BiImplicationOpContext)._left = _prevctx;
+						this.pushNewRecursionContext(_localctx, _startState, PierceParser.RULE_expr);
+						this.state = 21;
+						if (!(this.precpred(this._ctx, 1))) {
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 1)");
+						}
+						this.state = 22;
+						(_localctx as BiImplicationOpContext)._infixOp = this.match(PierceParser.BIIMPLICATION_OP);
+						this.state = 23;
+						(_localctx as BiImplicationOpContext)._right = this.expr(2);
+						}
+						break;
 					}
 					}
 				}
-				this.state = 19;
+				this.state = 28;
 				this._errHandler.sync(this);
-				_alt = this.interpreter.adaptivePredict(this._input, 1, this._ctx);
+				_alt = this.interpreter.adaptivePredict(this._input, 2, this._ctx);
 			}
 			}
 		}
@@ -190,23 +248,37 @@ export class PierceParser extends Parser {
 	private expr_sempred(_localctx: ExprContext, predIndex: number): boolean {
 		switch (predIndex) {
 		case 0:
+			return this.precpred(this._ctx, 4);
+
+		case 1:
+			return this.precpred(this._ctx, 3);
+
+		case 2:
+			return this.precpred(this._ctx, 2);
+
+		case 3:
 			return this.precpred(this._ctx, 1);
 		}
 		return true;
 	}
 
 	public static readonly _serializedATN: string =
-		"\x03\uC91D\uCABA\u058D\uAFBA\u4F53\u0607\uEA8B\uC241\x03\b\x17\x04\x02" +
-		"\t\x02\x03\x02\x03\x02\x03\x02\x03\x02\x03\x02\x03\x02\x03\x02\x03\x02" +
-		"\x05\x02\r\n\x02\x03\x02\x03\x02\x03\x02\x07\x02\x12\n\x02\f\x02\x0E\x02" +
-		"\x15\v\x02\x03\x02\x02\x02\x03\x02\x03\x02\x02\x02\x02\x02\x18\x02\f\x03" +
-		"\x02\x02\x02\x04\x05\b\x02\x01\x02\x05\r\x07\x06\x02\x02\x06\x07\x07\x03" +
-		"\x02\x02\x07\b\x05\x02\x02\x02\b\t\x07\x04\x02\x02\t\r\x03\x02\x02\x02" +
-		"\n\v\x07\x07\x02\x02\v\r\x05\x02\x02\x04\f\x04\x03\x02\x02\x02\f\x06\x03" +
-		"\x02\x02\x02\f\n\x03\x02\x02\x02\r\x13\x03\x02\x02\x02\x0E\x0F\f\x03\x02" +
-		"\x02\x0F\x10\x07\b\x02\x02\x10\x12\x05\x02\x02\x04\x11\x0E\x03\x02\x02" +
-		"\x02\x12\x15\x03\x02\x02\x02\x13\x11\x03\x02\x02\x02\x13\x14\x03\x02\x02" +
-		"\x02\x14\x03\x03\x02\x02\x02\x15\x13\x03\x02\x02\x02\x04\f\x13";
+		"\x03\uC91D\uCABA\u058D\uAFBA\u4F53\u0607\uEA8B\uC241\x03\v \x04\x02\t" +
+		"\x02\x03\x02\x03\x02\x03\x02\x03\x02\x03\x02\x03\x02\x03\x02\x03\x02\x05" +
+		"\x02\r\n\x02\x03\x02\x03\x02\x03\x02\x03\x02\x03\x02\x03\x02\x03\x02\x03" +
+		"\x02\x03\x02\x03\x02\x03\x02\x03\x02\x07\x02\x1B\n\x02\f\x02\x0E\x02\x1E" +
+		"\v\x02\x03\x02\x02\x02\x03\x02\x03\x02\x02\x02\x02\x02$\x02\f\x03\x02" +
+		"\x02\x02\x04\x05\b\x02\x01\x02\x05\r\x07\x06\x02\x02\x06\x07\x07\x03\x02" +
+		"\x02\x07\b\x05\x02\x02\x02\b\t\x07\x04\x02\x02\t\r\x03\x02\x02\x02\n\v" +
+		"\x07\x07\x02\x02\v\r\x05\x02\x02\x07\f\x04\x03\x02\x02\x02\f\x06\x03\x02" +
+		"\x02\x02\f\n\x03\x02\x02\x02\r\x1C\x03\x02\x02\x02\x0E\x0F\f\x06\x02\x02" +
+		"\x0F\x10\x07\b\x02\x02\x10\x1B\x05\x02\x02\x07\x11\x12\f\x05\x02\x02\x12" +
+		"\x13\x07\t\x02\x02\x13\x1B\x05\x02\x02\x06\x14\x15\f\x04\x02\x02\x15\x16" +
+		"\x07\n\x02\x02\x16\x1B\x05\x02\x02\x05\x17\x18\f\x03\x02\x02\x18\x19\x07" +
+		"\v\x02\x02\x19\x1B\x05\x02\x02\x04\x1A\x0E\x03\x02\x02\x02\x1A\x11\x03" +
+		"\x02\x02\x02\x1A\x14\x03\x02\x02\x02\x1A\x17\x03\x02\x02\x02\x1B\x1E\x03" +
+		"\x02\x02\x02\x1C\x1A\x03\x02\x02\x02\x1C\x1D\x03\x02\x02\x02\x1D\x03\x03" +
+		"\x02\x02\x02\x1E\x1C\x03\x02\x02\x02\x05\f\x1A\x1C";
 	public static __ATN: ATN;
 	public static get _ATN(): ATN {
 		if (!PierceParser.__ATN) {
@@ -351,6 +423,123 @@ export class BinaryOpContext extends ExprContext {
 	public accept<Result>(visitor: PierceVisitor<Result>): Result {
 		if (visitor.visitBinaryOp) {
 			return visitor.visitBinaryOp(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class OrOpContext extends ExprContext {
+	public _left!: ExprContext;
+	public _infixOp!: Token;
+	public _right!: ExprContext;
+	public expr(): ExprContext[];
+	public expr(i: number): ExprContext;
+	public expr(i?: number): ExprContext | ExprContext[] {
+		if (i === undefined) {
+			return this.getRuleContexts(ExprContext);
+		} else {
+			return this.getRuleContext(i, ExprContext);
+		}
+	}
+	public OR_OP(): TerminalNode { return this.getToken(PierceParser.OR_OP, 0); }
+	constructor(ctx: ExprContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: PierceListener): void {
+		if (listener.enterOrOp) {
+			listener.enterOrOp(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: PierceListener): void {
+		if (listener.exitOrOp) {
+			listener.exitOrOp(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: PierceVisitor<Result>): Result {
+		if (visitor.visitOrOp) {
+			return visitor.visitOrOp(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class ImplicationOpContext extends ExprContext {
+	public _left!: ExprContext;
+	public _infixOp!: Token;
+	public _right!: ExprContext;
+	public expr(): ExprContext[];
+	public expr(i: number): ExprContext;
+	public expr(i?: number): ExprContext | ExprContext[] {
+		if (i === undefined) {
+			return this.getRuleContexts(ExprContext);
+		} else {
+			return this.getRuleContext(i, ExprContext);
+		}
+	}
+	public IMPLICATION_OP(): TerminalNode { return this.getToken(PierceParser.IMPLICATION_OP, 0); }
+	constructor(ctx: ExprContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: PierceListener): void {
+		if (listener.enterImplicationOp) {
+			listener.enterImplicationOp(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: PierceListener): void {
+		if (listener.exitImplicationOp) {
+			listener.exitImplicationOp(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: PierceVisitor<Result>): Result {
+		if (visitor.visitImplicationOp) {
+			return visitor.visitImplicationOp(this);
+		} else {
+			return visitor.visitChildren(this);
+		}
+	}
+}
+export class BiImplicationOpContext extends ExprContext {
+	public _left!: ExprContext;
+	public _infixOp!: Token;
+	public _right!: ExprContext;
+	public expr(): ExprContext[];
+	public expr(i: number): ExprContext;
+	public expr(i?: number): ExprContext | ExprContext[] {
+		if (i === undefined) {
+			return this.getRuleContexts(ExprContext);
+		} else {
+			return this.getRuleContext(i, ExprContext);
+		}
+	}
+	public BIIMPLICATION_OP(): TerminalNode { return this.getToken(PierceParser.BIIMPLICATION_OP, 0); }
+	constructor(ctx: ExprContext) {
+		super(ctx.parent, ctx.invokingState);
+		this.copyFrom(ctx);
+	}
+	// @Override
+	public enterRule(listener: PierceListener): void {
+		if (listener.enterBiImplicationOp) {
+			listener.enterBiImplicationOp(this);
+		}
+	}
+	// @Override
+	public exitRule(listener: PierceListener): void {
+		if (listener.exitBiImplicationOp) {
+			listener.exitBiImplicationOp(this);
+		}
+	}
+	// @Override
+	public accept<Result>(visitor: PierceVisitor<Result>): Result {
+		if (visitor.visitBiImplicationOp) {
+			return visitor.visitBiImplicationOp(this);
 		} else {
 			return visitor.visitChildren(this);
 		}

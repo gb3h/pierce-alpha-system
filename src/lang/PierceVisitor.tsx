@@ -8,6 +8,9 @@ import { NameContext } from "./PierceParser";
 import { ParenthesisContext } from "./PierceParser";
 import { UnaryOpContext } from "./PierceParser";
 import { BinaryOpContext } from "./PierceParser";
+import { OrOpContext } from "./PierceParser";
+import { ImplicationOpContext } from "./PierceParser";
+import { BiImplicationOpContext } from "./PierceParser";
 import { ExprContext } from "./PierceParser";
 
 
@@ -50,6 +53,30 @@ export interface PierceVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitBinaryOp?: (ctx: BinaryOpContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by the `OrOp`
+	 * labeled alternative in `PierceParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitOrOp?: (ctx: OrOpContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by the `ImplicationOp`
+	 * labeled alternative in `PierceParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitImplicationOp?: (ctx: ImplicationOpContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by the `BiImplicationOp`
+	 * labeled alternative in `PierceParser.expr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitBiImplicationOp?: (ctx: BiImplicationOpContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `PierceParser.expr`.
